@@ -1,5 +1,6 @@
 #include <iostream>
 #include <bits/stdc++.h>
+
 using namespace std;
 int quickArr[100];
 int Partition(int i,int j){
