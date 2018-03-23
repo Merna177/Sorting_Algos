@@ -114,6 +114,21 @@ string toHexa(int a){/// converts decimal to hexa
   }
   return ret;
 }
+string toHexaOneByte(int a){/// converts decimal to hexa
+  string ret="";
+  int power=16;
+  for(int i=1;i>=0;i--){
+      for(int j=15;j>=0;j--){
+        if(j*power<=a){
+            ret+=val[15-j];
+            a-=j*power;
+            break;
+        }
+      }
+      power/=16;
+  }
+  return ret;
+}
 void printIntermediate(int tmp){
   FILE *f = fopen("intermediate.out","a");
   string loc=toHexa(tmp);
@@ -209,7 +224,7 @@ string toAscii(string a){/// converts operand to ascii
   string ret="";
   for(int i=0;i<a.length();i++){
      int convert=a[i];
-     ret+=toHexa(convert);
+     ret+=toHexaOneByte(convert);
   }
   return ret;
 }
@@ -264,7 +279,7 @@ void Pass2(){
     while(1){
          if(dir=="END"){
             if(record.length()){
-                string send=toHexa(recordStart);
+                string send=makeSizeSix(toHexa(recordStart));
                 send+=" ";
                 string z=toHexa((len+1)/2);
                 z.erase(z.begin(),z.begin()+2);
@@ -273,7 +288,13 @@ void Pass2(){
                 send+=record;
                 printObj('T',send);
             }
-            printListing("");
+            if(SYMTAB.count(operand)){
+                operand=toHexa(SYMTAB[operand]);
+                s.erase(s.end()-operand.length()-2,s.end());
+                printListing(operand);
+            }
+            else
+              printListing("");
             printObj('E',operand);
             break;
          }
@@ -316,29 +337,43 @@ void Pass2(){
                         }/// tmp ta2reban mlosh lzma
                         s=tmp;
                         if(dir=="WORD"){
-                            if(opcodeValue.length()==0)printListing(makeSizeSix(toHexa(fromStringtoInt(operand))));
+                            if(opcodeValue.length()==0){
+                                   if(operand[operand.length()-1]=='H'){
+                                       operand.erase(operand.end()-1,operand.end());
+                                       printListing(operand);
+                                   }
+                                   else
+                                    printListing(makeSizeSix(toHexa(fromStringtoInt(operand))));
+                            }
                             else if(operand[0]=='X')
                                printListing(makeSizeSix(opcodeValue));
                             else if(operand[0]=='C')
                                printListing(makeSizeSix(toAscii(opcodeValue)));
                         }
                         else{
-                          if(opcodeValue.length()==0)printListing(toHexa(fromStringtoInt(operand)));
+                          if(opcodeValue.length()==0){
+                             if(operand[operand.length()-1]=='H'){
+                                    operand.erase(operand.end()-1,operand.end());
+                                    printListing(operand);
+                             }
+                            else
+                                printListing(toHexa(fromStringtoInt(operand)));
+                          }
                           else if(operand[0]=='X')
                             printListing(opcodeValue);
-                          else if(operand[0]=='C')
+                          else if(operand[0]=='C'){
                             printListing(toAscii(opcodeValue));
+                          }
                         }
                     }
                     else{
                            ///RESW RESB
                            printListing("");
-                           recordStart=-1;
                     }
                 }
          }
          if(objectCode.length()+len>60||((dir=="RESW"||dir=="RESB")&&record.length()!=0)){
-            string send=toHexa(recordStart);
+            string send=makeSizeSix(toHexa(recordStart));
             send+=" ";
             string z=toHexa((len+1)/2);
             z.erase(z.begin(),z.begin()+2);
@@ -383,6 +418,9 @@ int main()
     OPTAB["STL"]="14";
     OPTAB["JSUB"]="48";
     OPTAB["COMP"]="28";
+    OPTAB["LDCH"]="50";
+    OPTAB["STCH"]="54";
+    OPTAB["SUB"]="1C";
     Pass1();
     f = fopen("intermediate.out","r");
     Pass2();
