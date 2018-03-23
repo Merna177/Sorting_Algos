@@ -33,9 +33,9 @@ int main()
    /// test case
    /// size of each case
    /// integers in this case
-   cout<<8<<endl;
-   int n[]={5,10,50,100,500,1000,5000,10000};
-   for(int i=0;i<8;i++){
+   cout<<6<<endl;
+   int n[]={1000,2000,3000,4000,5000,6000};
+   for(int i=0;i<6;i++){
       cout<<n[i]<<' ';
       for(int j=0;j<n[i];j++){
         int r=rand()%1000000000;

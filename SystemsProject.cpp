@@ -315,19 +315,29 @@ void Pass2(){
                             tmp+=s[i];
                         }/// tmp ta2reban mlosh lzma
                         s=tmp;
-                        if(opcodeValue.length()==0)printListing(toHexa(fromStringtoInt(operand)));
-                        else if(operand[0]=='X')
-                           printListing(opcodeValue);
-                        else if(operand[0]=='C')
-                           printListing(toAscii(opcodeValue));
+                        if(dir=="WORD"){
+                            if(opcodeValue.length()==0)printListing(makeSizeSix(toHexa(fromStringtoInt(operand))));
+                            else if(operand[0]=='X')
+                               printListing(makeSizeSix(opcodeValue));
+                            else if(operand[0]=='C')
+                               printListing(makeSizeSix(toAscii(opcodeValue)));
+                        }
+                        else{
+                          if(opcodeValue.length()==0)printListing(toHexa(fromStringtoInt(operand)));
+                          else if(operand[0]=='X')
+                            printListing(opcodeValue);
+                          else if(operand[0]=='C')
+                            printListing(toAscii(opcodeValue));
+                        }
                     }
                     else{
                            ///RESW RESB
                            printListing("");
+                           recordStart=-1;
                     }
                 }
          }
-         if(objectCode.length()+len>60){
+         if(objectCode.length()+len>60||((dir=="RESW"||dir=="RESB")&&record.length()!=0)){
             string send=toHexa(recordStart);
             send+=" ";
             string z=toHexa((len+1)/2);
@@ -336,9 +346,16 @@ void Pass2(){
             send+=" ";
             send+=record;
             printObj('T',send);
-            recordStart=tmp;
-            record=objectCode;
-            len=objectCode.length();
+            if(dir!="RESW"&&dir!="RESB"){
+              recordStart=tmp;
+              record=objectCode;
+              len=objectCode.length();
+            }
+            else{
+                recordStart=-1;
+                record="";
+                len=0;
+            }
          }
          else{
             record+=" ";
