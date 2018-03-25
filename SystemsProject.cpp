@@ -2,6 +2,21 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+#define TIMING
+
+#ifdef TIMING
+#define INIT_TIMER auto start = std::chrono::high_resolution_clock::now();
+#define START_TIMER  start = std::chrono::high_resolution_clock::now();
+#define STOP_TIMER(name)  std::cout << "RUNTIME of " << name << ": " << \
+    std::chrono::duration_cast<std::chrono::milliseconds>( \
+            std::chrono::high_resolution_clock::now()-start \
+    ).count() << " ms " << std::endl;
+#else
+#define INIT_TIMER
+#define START_TIMER
+#define STOP_TIMER(name)
+#endif
+
 map<string,int>SYMTAB;
 map<string,bool>isDir;
 map<string,string>OPTAB;
@@ -101,6 +116,10 @@ int getSize(string s){/// returns size of the operand in case of BYTE
 string val="FEDCBA9876543210";
 string toHexa(int a){/// converts decimal to hexa
   string ret="";
+  if(s.length()>2){
+    if(s[s.length()-1]=='X'&&s[s.length()-2]==',')
+        a+=(1<<15);
+  }
   int power=16*16*16;
   for(int i=3;i>=0;i--){
       for(int j=15;j>=0;j--){
@@ -195,7 +214,7 @@ void Pass1(){
                 locationCounter+=getSize(operand);
             }
             else{
-                //printf("ERROR : not defined opCode\n");
+                printf("ERROR : not defined opCode\n");
                 ERROR=1;
                 flag=1;
             }
@@ -327,9 +346,9 @@ void Pass2(){
                         string tmp="";
                         opcodeValue="";
                         for(int i=0;i<s.length();i++){
-                            if((s[i]=='X'||s[i]=='C')&&s[i+1]=='\''){
+                            if((s[i]=='X'||s[i]=='C')&&s[i+1]=='’'){/// gowa X hexa
                                 i+=2;
-                                while(s[i]!='\'')
+                                while(s[i]!='’')
                                     opcodeValue+=s[i++];
                                 break;
                             }
@@ -402,6 +421,8 @@ void Pass2(){
 }
 int main()
 {
+    INIT_TIMER;
+    START_TIMER;
     freopen("test.in","r",stdin);
     isDir["START"];
     isDir["BYTE"];
@@ -421,8 +442,14 @@ int main()
     OPTAB["LDCH"]="50";
     OPTAB["STCH"]="54";
     OPTAB["SUB"]="1C";
+    OPTAB["TD"]="E0";
+    OPTAB["RD"]="D8";
+    OPTAB["WD"]="DC";
+    OPTAB["JEQ"]="30";
+    OPTAB["MUL"]="20";
     Pass1();
     f = fopen("intermediate.out","r");
     Pass2();
+    STOP_TIMER("Time taken by the program : ");
     return 0;
 }
