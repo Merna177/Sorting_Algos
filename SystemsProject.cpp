@@ -114,10 +114,11 @@ int getSize(string s){/// returns size of the operand in case of BYTE
     return sum;
 }
 string val="FEDCBA9876543210";
+bool inPass2=0;
 string toHexa(int a){/// converts decimal to hexa
   string ret="";
   if(s.length()>2){
-    if(s[s.length()-1]=='X'&&s[s.length()-2]==',')
+    if(s[s.length()-1]=='X'&&s[s.length()-2]==','&&inPass2)
         a+=(1<<15);
   }
   int power=16*16*16;
@@ -199,22 +200,28 @@ void Pass1(){
          }
          else{
             if(OPTAB.count(dir)){
+              if(!flag)
                 locationCounter+=3;
             }
             else if(dir=="WORD"){
+               if(!flag)
                 locationCounter+=3;
             }
             else if(dir=="RESW"){
+               if(!flag)
                 locationCounter+=3*toInt(operand);
             }
             else if(dir=="RESB"){
+               if(!flag)
                 locationCounter+=toInt(operand);
             }
             else if(dir=="BYTE"){
+               if(!flag)
                 locationCounter+=getSize(operand);
             }
             else{
                 printf("ERROR : not defined opCode\n");
+                cout<<dir<<endl;
                 ERROR=1;
                 flag=1;
             }
@@ -232,9 +239,27 @@ void printListing(string code){/// prints into listing file after PASS 2
   for(int i=0;i<s.length();i++){
       fprintf(f,"%c",s[i]);
   }
-  fprintf(f," ");
+  for(int i=s.length();i<50;i++)
+     fprintf(f," ");
   for(int i=0;i<code.length();i++){
       fprintf(f,"%c",code[i]);
+  }
+  fprintf(f,"\n");
+  fclose(f);
+}
+
+void printTable(){/// prints into listing file after PASS 2
+  FILE *f = fopen("SYMTAB.out","a");
+  for(map<string,int>::iterator it=SYMTAB.begin();it!=SYMTAB.end();it++){/// printing the map key,value
+       string key=it->first;
+       int value=it->second;
+       for(int i=0;i<key.length();i++)
+        fprintf(f,"%c",key[i]);
+       string x=toHexa(value);
+       fprintf(f,"   ");
+       for(int i=0;i<x.length();i++)
+        fprintf(f,"%c",x[i]);
+       fprintf(f,"\n");
   }
   fprintf(f,"\n");
   fclose(f);
@@ -266,12 +291,14 @@ void printObj(char c,string code){/// prints into listing file after PASS 2
 }
 string makeSizeSix(string s){
     if(s.length()>=6)return s;
-    for(int i=0;i+s.length()<=6;i++){
+    int n=s.length();
+    for(int i=0;i+n<6;i++){
         s="0"+s;
     }
     return s;
 }
 void Pass2(){
+    inPass2=1;
     int operandAddress,tmp;
     string opcodeValue;
     getInput2();
@@ -314,7 +341,7 @@ void Pass2(){
             }
             else
               printListing("");
-            printObj('E',operand);
+            printObj('E',makeSizeSix(operand));
             break;
          }
          if(dir=="START"){
@@ -346,15 +373,14 @@ void Pass2(){
                         string tmp="";
                         opcodeValue="";
                         for(int i=0;i<s.length();i++){
-                            if((s[i]=='X'||s[i]=='C')&&s[i+1]=='’'){/// gowa X hexa
+                            if((s[i]=='X'||s[i]=='C')&&(s[i+1]=='’'||s[i+1]=='\'')){/// gowa X hexa
                                 i+=2;
-                                while(s[i]!='’')
+                                while(s[i]!='’'&&s[i]!='\'')
                                     opcodeValue+=s[i++];
                                 break;
                             }
                             tmp+=s[i];
                         }/// tmp ta2reban mlosh lzma
-                        s=tmp;
                         if(dir=="WORD"){
                             if(opcodeValue.length()==0){
                                    if(operand[operand.length()-1]=='H'){
@@ -369,7 +395,7 @@ void Pass2(){
                             else if(operand[0]=='C')
                                printListing(makeSizeSix(toAscii(opcodeValue)));
                         }
-                        else{
+                        else{///WORD
                           if(opcodeValue.length()==0){
                              if(operand[operand.length()-1]=='H'){
                                     operand.erase(operand.end()-1,operand.end());
@@ -378,7 +404,7 @@ void Pass2(){
                             else
                                 printListing(toHexa(fromStringtoInt(operand)));
                           }
-                          else if(operand[0]=='X')
+                          else if(operand[0]=='X')/// mfrod yd5ol hena
                             printListing(opcodeValue);
                           else if(operand[0]=='C'){
                             printListing(toAscii(opcodeValue));
@@ -450,6 +476,7 @@ int main()
     Pass1();
     f = fopen("intermediate.out","r");
     Pass2();
+    printTable();
     STOP_TIMER("Time taken by the program : ");
     return 0;
 }
