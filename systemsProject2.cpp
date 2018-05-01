@@ -104,6 +104,7 @@ void expression(){ /// id |   factor + factor | factor * factor
    while(get()==13||get()==18){
       incr();
       if(get()!=17)ERROR();
+      incr();
    }
 }
 void READ(){
@@ -167,7 +168,7 @@ int main()
     freopen("test.in","r",stdin);
     string s;
     addKeywords();
-    for(int i=0;i<5;i++){
+    for(int i=0;i<7;i++){
          getline(cin,s);
          vector<string>z=spaceDivide(s);
          for(int j=0;j<z.size();j++)
@@ -176,4 +177,13 @@ int main()
     parse();
     return 0;
 }
+/*
+PROGRAM BICS
+VAR
+X,Y,A,B,C,Z
+BEGIN
+X := X+5;
+A := Y*5+11*Z+9.5;
+END.
+*/
 
