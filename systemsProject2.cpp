@@ -51,6 +51,7 @@ vector<string>spaceDivide(string s){
    }
    if(cur.length())
     ret.pb(cur);
+   return ret;
 }
 vector<ii>tokens;
 void divideIntoTokens(string s){
@@ -60,7 +61,7 @@ void divideIntoTokens(string s){
        string x=s.substr(start,len);
         int type=isToken(x);
     if(type){
-        tokens.push_back(make_pair(type,x));cout<<x<<endl;
+        tokens.push_back(make_pair(type,x));
         start+= x.size();
         len=s.size()-start;
     }
@@ -97,6 +98,14 @@ void ERROR(){
         cout<<"Syntax Error";
         exit(0);
 }
+void expression(){ /// id |   factor + factor | factor * factor
+   if(get()!=17)ERROR();
+   incr();
+   while(get()==13||get()==18){
+      incr();
+      if(get()!=17)ERROR();
+   }
+}
 void READ(){
 
 }
@@ -107,7 +116,14 @@ void FOR(){
 
 }
 void ASSIGN(){
-
+    if(get()==17&&isNumber(idx)==0)incr();
+    else ERROR();
+    if(get()==12)incr();
+    else ERROR();
+    ///expression
+    expression();
+    if(get()!=11)ERROR();
+    incr();
 }
 void statements(){
    while(get()==7||get()==8||get()==14||(get()==17&&isNumber(idx)==0)){
@@ -148,6 +164,16 @@ void parse(){
 }
 int main()
 {
-
+    freopen("test.in","r",stdin);
+    string s;
+    addKeywords();
+    for(int i=0;i<5;i++){
+         getline(cin,s);
+         vector<string>z=spaceDivide(s);
+         for(int j=0;j<z.size();j++)
+            divideIntoTokens(z[j]);
+    }
+    parse();
     return 0;
 }
+
