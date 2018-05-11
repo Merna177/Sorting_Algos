@@ -133,8 +133,20 @@ bool search(node *now,int key){
    if(key<now->value)return search(now->left,key);
    return true;
 }
+int getLevel(node *now){
+   if(now==NULL)return 0;
+   return 1+max(getLevel(now->left),getLevel(now->right));
+}
+int getSize(node *now){
+   if(now==NULL)return 0;
+   return 1 + getSize(now->left)+getSize(now->right);
+}
 int main()
 {
-
+    for(int i=0;i<16;i++){
+        insertRB(i);
+        cout<<getSize(root)<<"    "<<getLevel(root)<<endl;
+    }
     return 0;
 }
+
