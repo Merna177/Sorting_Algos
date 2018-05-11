@@ -9,6 +9,7 @@ using namespace std;
 #define S second
 typedef pair<int,string>ii;
 vector<string>keywords;
+bool flag=0,flag2=0;
 void addKeywords()
 {
     keywords.pb("PROGRAM");
@@ -126,33 +127,90 @@ void expression()  /// id |   factor + factor | factor * factor
         incr();
     }
 }
+vector<string>scanning;
+///
+void generateMyWRITE(){
+    int    index=0;
+    while(index<scanning.size()){
+    if(flag2==1){
+        cout<<"LDA "<<scanning[index]<<endl;
+        cout<<"JSUB WRITE"<<endl;
+        index++;
+    }
+    else{
+        flag2=1;
+    cout<<"WRITE  LDX #0"<<endl;
+    cout<<"STA SCAN"<<endl;
+    cout<<"LDT #3"<<endl;
+    cout<<"JLOOP LDCH SCAN,X"<<endl;
+    cout<<"TD INDEV"<<endl;
+    cout<<"JEQ TLOOP"<<endl;
+    cout<<"WD INDEV"<<endl;
+    cout<<"TIXR T"<<endl;
+    cout<<"JLLT TLOOP"<<endl;
+    cout<<"RSUB"<<endl;
+    }
+
+    }
+}
+void generateMyREAD(){
+int    index=0;
+    while(index<scanning.size()){
+    if(flag==1){
+        cout<<"JSUB READ"<<endl;
+        cout<<"STA "<<scanning[index]<<endl;
+        index++;
+    }
+    else{
+        flag=1;
+    cout<<"READ  LDX #0"<<endl;
+    cout<<"LDT #3"<<endl;
+    cout<<"TLOOP TD INDEV"<<endl;
+    cout<<"JEQ TLOOP"<<endl;
+    cout<<"RD INDEV"<<endl;
+    cout<<"STCH SCAN,X"<<endl;
+    cout<<"TIXR T"<<endl;
+    cout<<"JLLT TLOOP"<<endl;
+    cout<<"LDA SCAN"<<endl;
+    cout<<"RSUB"<<endl;
+    }
+
+    }
+}
+///
 void READ()
 {
     incr();
     if(get()!=15)ERROR();
     incr();
     if(get()!=17||isNumber(idx))ERROR();
+    scanning.pb(tokens[idx].S);
     incr();
     while(get()==19)
     {
         incr();
         if(get()!=17||isNumber(idx))ERROR();
+        scanning.pb(tokens[idx].S);
         incr();
     }
+    generateMyREAD();
     if(get()!=16)ERROR();
     incr();
 }
 void WRITE()
 {
+    scanning.clear();
     incr();
     if(get()!=15)ERROR();
     incr();
     if(get()!=17||isNumber(idx))ERROR();
+    scanning.pb(tokens[idx].S);
     incr();
     while(get()==19)
     {
         incr();
         if(get()!=17||isNumber(idx))ERROR();
+        scanning.pb(tokens[idx].S);
         incr();
     }
     if(get()!=16)ERROR();
@@ -352,9 +410,10 @@ void parse()
 int main()
 {
     freopen("test.in","r",stdin);
+    freopen("test.out","w",stdout);
     string s;
     addKeywords();
-    for(int i=0; i<16; i++)
+    for(int i=0; i<11; i++)
     {
         getline(cin,s);
         vector<string>z=spaceDivide(s);
@@ -363,7 +422,12 @@ int main()
     }
     parse();
     for(int i=0;i<operations.size();i++)cout<<operations[i]<<endl;
+    generateMyWRITE();
     for(int i=0;i<allvar.size();i++)cout<<allvar[i]<<" RESW 1\n";
+    if(flag==1 || flag2==1){
+        cout<<"INDEV BYTE \"F2\" \n";
+        cout<<"SCAN RESW 1\n";
+    }
     return 0;
 }
 /*
@@ -375,3 +439,4 @@ X := X+5;
 A := Y*5+11*Z+9.5;
 END.
 */
+
