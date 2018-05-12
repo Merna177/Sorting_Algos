@@ -335,7 +335,7 @@ void assignAssembley(){
    }
    neededVar=max(neededVar,cur);
    if(all.empty()){
-      operations.pb("STA "+add.back());
+      operations.pb("LDA "+add.back());
       add.pop_back();
    }
    for(int i=0;i<add.size();i++){
@@ -409,11 +409,11 @@ void parse()
 }
 int main()
 {
-    freopen("test.in","r",stdin);
-    freopen("test.out","w",stdout);
+    freopen("exp.txt","r",stdin);
+    //freopen("test.out","w",stdout);
     string s;
     addKeywords();
-    for(int i=0; i<11; i++)
+    for(int i=0; i<8; i++)
     {
         getline(cin,s);
         vector<string>z=spaceDivide(s);
