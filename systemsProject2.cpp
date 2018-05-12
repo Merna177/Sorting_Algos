@@ -34,8 +34,8 @@ int isToken(string s)
             return i+1;
         }
     }
-    if(regex_match(s,regex("-|[[:digit:]]+|\\-|[[:digit:]]+.[[:digit:]]+")))return 17;
-    if(regex_match(s,regex("([a-z]|[A-Z])([[:digit:]]|[a-z]|[A-Z])*")))return 17;
+    if(regex_match(s,regex("-|[[:digit:]]+|\\-|[[:digit:]]+.[[:digit:]]+"))){return 17;}
+    if(regex_match(s,regex("(([a-z]|[A-Z])([[:digit:]]|[a-z]|[A-Z])*)")))return 17;
     if(s==";")return 11;
     if(s==":=")return 12;
     if(s=="+")return 13;
@@ -118,14 +118,32 @@ void ERROR()
 }
 void expression()  /// id |   factor + factor | factor * factor
 {
+    int open=0;
+    if(get()==15){
+        open++;
+        incr();
+    }
     if(get()!=17)ERROR();
     incr();
-    while(get()==13||get()==18)
+    bool next=1;
+    while(get()==13||get()==18||get()==15||get()==16)
     {
+        if(get()==15)open++;
+        if(get()==16)open--;
+        if(open<0)ERROR();
+        if(get()==16&&(tokens[idx+1].F!=13&&tokens[idx+1].F!=18)){
+            incr();
+            break;
+        }
+        if(get()==16){
+            incr();
+            continue;
+        }
         incr();
         if(get()!=17)ERROR();
         incr();
     }
+    if(open)ERROR();
 }
 vector<string>scanning;
 ///
@@ -281,67 +299,88 @@ string intToString(int a){
 void assignAssembley(){
    /// v[0] is the index to save data into
    /// skip v[0]+1
-   vector<vector<int> >all;
-   vector<int>var;
-   vector<string>add;
-   set<int>st;
+   /// 13 + 18 * 17 id 15 ( 16 )
+   stack<ii>st;
+   bool empty=1;
+   int used=0;
    for(int i=v[0]+2;i<=v[1];i++){
-        if(tokens[i].F==18){ /// *
-             if(var.empty()||var.back()!=i-1){
-                 if(var.size()){
-                    all.pb(var);
-                    var.clear();
-                 }
-                 var.pb(i-1);
-                 st.insert(i-1);
-             }
-             var.pb(i+1);
-             st.insert(i+1);
+        if(tokens[i].F==15){
+            st.push(tokens[i]);
         }
-   }
-   for(int i=v[0]+2;i<=v[1];i++){
-       if(tokens[i].F==17){
-          if(!st.count(i))
-           if(isNumber(i))
-             add.pb("#"+tokens[i].S);
-           else
-             add.pb(tokens[i].S);
-       }
-   }
-   if(var.size())all.pb(var);
-   int cur=0;
-   for(int i=0;i<all.size();i++){
-       for(int j=0;j<all[i].size();j++){
-           int pos=all[i][j];
-           if(j==0){
-               operations.pb("LDA "+tokens[pos].S);
+        if(tokens[i].F==16){
+            empty=1;
+            while(st.size()&&st.top().F!=15){
+                ii cur=st.top();
+                st.pop();
+                if(cur.F==13)continue;
+                if(empty){
+                   cout<<"LDA "<<cur.S<<endl;
+                   empty=0;
+                }
+                else{
+                    cout<<"ADD "<<cur.S<<endl;
+                }
+            }
+            st.pop();
+            used++;
+            while(tokens[i+1].F==18){
+                i++;
+                i++;
+                cout<<"MUL "<<tokens[i].S<<endl;
+                i++;
+            }
+            cout<<"STA "<<"USEDVAR"<<used<<endl;
+            st.push(ii(17,"USEDVAR"+intToString(used)));
+            empty=1;
+        }
+        if(tokens[i].F==13){
+            st.push(tokens[i]);
+        }
+        if(tokens[i].F==18){
+            st.push(tokens[i]);
+        }
+        if(tokens[i].F==17){
+           bool in=0;
+           while(st.size()&&st.top().F==18){
+               in=1;
+               st.pop();
+               if(empty){
+                  cout<<"LDA "<<st.top().S<<endl;
+                  st.pop();
+                  empty=0;
+               }
+               else{
+                 cout<<"MUL "<<st.top().S;
+                 st.pop();
+               }
+           }
+           if(in){
+            cout<<"MUL "<<tokens[i].S<<endl;
+            while(tokens[i+1].F==18){
+                 i++;
+                 i++;
+                 cout<<"MUL "<<tokens[i].S<<endl;
+                 i++;
+            }
+            used++;
+            cout<<"STA "<<"USEDVAR"<<used<<endl;
+            st.push(ii(17,"USEDVAR"+intToString(used)));
            }
            else{
-              if(isNumber(pos))
-               operations.pb("MUL #"+tokens[pos].S);
-              else
-               operations.pb("MUL "+tokens[pos].S);
+            st.push(tokens[i]);
            }
-       }
-      if(i+1<all.size()){ /// keep last result in the
-       cur++;
-       operations.pb("STA savedVariables"+intToString(cur));
-      }
-      else{
-         for(int j=1;j<=cur;j++){
-            operations.pb("ADD savedVariables"+intToString(j));
-         }
-      }
+           empty=1;
+        }
    }
-   neededVar=max(neededVar,cur);
-   if(all.empty()){
-      operations.pb("LDA "+add.back());
-      add.pop_back();
+   cout<<"LDA "<<st.top().S<<endl;
+   st.pop();
+   while(st.size()){
+       if(st.top().F==13){st.pop();continue;}
+       if(st.top().F==17)cout<<"ADD "<<st.top().S<<endl;
+       st.pop();
    }
-   for(int i=0;i<add.size();i++){
-      operations.pb("ADD "+add[i]);
-   }
-   operations.pb("STA "+tokens[v[0]].S);
+   cout<<"STA "<<tokens[v[0]].S<<endl;
+   neededVar=max(neededVar,used);
 }
 void ASSIGN()
 {
@@ -409,11 +448,11 @@ void parse()
 }
 int main()
 {
-    freopen("exp.txt","r",stdin);
+    freopen("exp22.txt","r",stdin);
     //freopen("test.out","w",stdout);
     string s;
     addKeywords();
-    for(int i=0; i<8; i++)
+    for(int i=0; i<6; i++)
     {
         getline(cin,s);
         vector<string>z=spaceDivide(s);
@@ -428,6 +467,7 @@ int main()
         cout<<"INDEV BYTE \"F2\" \n";
         cout<<"SCAN RESW 1\n";
     }
+    for(int i=1;i<=neededVar;i++)cout<<"USEDVAR"<<i<<" RESW 1\n";
     return 0;
 }
 /*
