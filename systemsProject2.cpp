@@ -2,6 +2,7 @@
 #include <regex>
 #include <set>
 #include <string>
+#include <bits/stdc++.h>
 using namespace std;
 
 #define pb push_back
@@ -315,9 +316,11 @@ void assignAssembley(){
    /// v[0] is the index to save data into
    /// skip v[0]+1
    /// 13 + 18 * 17 id 15 ( 16 )
+   cout<<endl;
    stack<ii>st;
    bool empty=1;
    int used=0;
+   string last1="",last2="";
    for(int i=v[0]+2;i<=v[1];i++){
         if(tokens[i].F==15){
             st.push(tokens[i]);
@@ -329,11 +332,17 @@ void assignAssembley(){
                 st.pop();
                 if(cur.F==13)continue;
                 if(empty){
+                  if(last1=="STA"&&last2==cur.S);
+                  else
                    cout<<"LDA "<<cur.S<<endl;
+                  last1="LDA";
+                  last2=cur.S;
                    empty=0;
                 }
                 else{
                     cout<<"ADD "<<cur.S<<endl;
+                    last1="ADD";
+                    last2=cur.S;
                 }
             }
             st.pop();
@@ -342,9 +351,13 @@ void assignAssembley(){
                 i++;
                 i++;
                 cout<<"MUL "<<tokens[i].S<<endl;
+                last1="MUL";
+                last2=tokens[i].S;
                 i++;
             }
             cout<<"STA "<<"USEDVAR"<<used<<endl;
+            last1="STA";
+            last2="USEDVAR"+intToString(used);
             st.push(ii(17,"USEDVAR"+intToString(used)));
             empty=1;
         }
@@ -360,17 +373,25 @@ void assignAssembley(){
                in=1;
                st.pop();
                if(empty){
+                 if(last1=="STA"&&last2==st.top().S);
+                 else
                   cout<<"LDA "<<st.top().S<<endl;
+                  last1="LDA";
+                  last2=st.top().S;
                   st.pop();
                   empty=0;
                }
                else{
                  cout<<"MUL "<<st.top().S;
+                 last1="MUL";
+                 last2=st.top().S;
                  st.pop();
                }
            }
            if(in){
             cout<<"MUL "<<tokens[i].S<<endl;
+            last1="MUL";
+            last2=tokens[i].S;
             while(tokens[i+1].F==18){
                  i++;
                  i++;
@@ -378,7 +399,13 @@ void assignAssembley(){
                  i++;
             }
             used++;
+            if(i==v[1]&&st.empty()){
+                    cout<<"STA "<<tokens[v[0]].S<<endl<<endl;
+                    return;
+            }
             cout<<"STA "<<"USEDVAR"<<used<<endl;
+            last1="STA";
+            last2="USEDVAR"+intToString(used);
             st.push(ii(17,"USEDVAR"+intToString(used)));
            }
            else{
@@ -387,6 +414,8 @@ void assignAssembley(){
            empty=1;
         }
    }
+  if(last1=="STA"&&last2==st.top().S);
+  else
    cout<<"LDA "<<st.top().S<<endl;
    st.pop();
    while(st.size()){
@@ -396,6 +425,7 @@ void assignAssembley(){
    }
    cout<<"STA "<<tokens[v[0]].S<<endl;
    neededVar=max(neededVar,used);
+   cout<<endl;
 }
 void ASSIGN()
 {
@@ -467,16 +497,15 @@ int main()
    // freopen("test.out","w",stdout);
     string s;
     addKeywords();
-    for(int i=0; i<8; i++)
+    for(int i=0; i<12; i++)
     {
         getline(cin,s);
         vector<string>z=spaceDivide(s);
         for(int j=0; j<z.size(); j++)
             divideIntoTokens(z[j]);
     }
-   cout<<tokens[1].second<<" START 0"<<endl;
+   cout<<tokens[1].second<<" START 1000"<<endl;
     parse();
-    for(int i=0;i<operations.size();i++)cout<<operations[i]<<endl;
     if(flag1==1 || flag2==1){
         cout<<"J ENDPROG"<<endl;
         if(flag1==1){
@@ -531,3 +560,4 @@ secs:= mins*sixity;
 WRITE(mins,secs)
 END.
 */
+
