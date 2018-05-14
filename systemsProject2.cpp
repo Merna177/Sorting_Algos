@@ -9,7 +9,7 @@ using namespace std;
 #define S second
 typedef pair<int,string>ii;
 vector<string>keywords;
-bool flag=0,flag2=0;
+bool flag1=0,flag2=0,Wr=0,RE=0;
 void addKeywords()
 {
     keywords.pb("PROGRAM");
@@ -34,8 +34,8 @@ int isToken(string s)
             return i+1;
         }
     }
-    if(regex_match(s,regex("-|[[:digit:]]+|\\-|[[:digit:]]+.[[:digit:]]+"))){return 17;}
-    if(regex_match(s,regex("(([a-z]|[A-Z])([[:digit:]]|[a-z]|[A-Z])*)")))return 17;
+    if(regex_match(s,regex("-|[[:digit:]]+|\\-|[[:digit:]]+.[[:digit:]]+")))return 17;
+    if(regex_match(s,regex("([a-z]|[A-Z])([[:digit:]]|[a-z]|[A-Z]|_)*")))return 17;
     if(s==";")return 11;
     if(s==":=")return 12;
     if(s=="+")return 13;
@@ -116,6 +116,7 @@ void ERROR()
     cout<<"Syntax Error";
     exit(0);
 }
+
 void expression()  /// id |   factor + factor | factor * factor
 {
     int open=0;
@@ -139,6 +140,12 @@ void expression()  /// id |   factor + factor | factor * factor
             incr();
             continue;
         }
+        if(get()==13||get()==18){
+            if(tokens[idx+1].F==15){
+                incr();
+                continue;
+            }
+        }
         incr();
         if(get()!=17)ERROR();
         incr();
@@ -150,37 +157,17 @@ vector<string>scanning;
 void generateMyWRITE(){
     int    index=0;
     while(index<scanning.size()){
-    if(flag2==1){
+    flag2=1;
         cout<<"LDA "<<scanning[index]<<endl;
         cout<<"JSUB WRITE"<<endl;
         index++;
-    }
-    else{
-        flag2=1;
-    cout<<"WRITE  LDX #0"<<endl;
-    cout<<"STA SCAN"<<endl;
-    cout<<"LDT #3"<<endl;
-    cout<<"JLOOP LDCH SCAN,X"<<endl;
-    cout<<"TD INDEV"<<endl;
-    cout<<"JEQ TLOOP"<<endl;
-    cout<<"WD INDEV"<<endl;
-    cout<<"TIXR T"<<endl;
-    cout<<"JLLT TLOOP"<<endl;
-    cout<<"RSUB"<<endl;
-    }
+
 
     }
+
+
 }
-void generateMyREAD(){
-int    index=0;
-    while(index<scanning.size()){
-    if(flag==1){
-        cout<<"JSUB READ"<<endl;
-        cout<<"STA "<<scanning[index]<<endl;
-        index++;
-    }
-    else{
-        flag=1;
+void SUBROUTINE_READ(){
     cout<<"READ  LDX #0"<<endl;
     cout<<"LDT #3"<<endl;
     cout<<"TLOOP TD INDEV"<<endl;
@@ -191,13 +178,35 @@ int    index=0;
     cout<<"JLLT TLOOP"<<endl;
     cout<<"LDA SCAN"<<endl;
     cout<<"RSUB"<<endl;
-    }
 
-    }
+
+}
+void SUBROUTINE_WRITE(){
+    cout<<"WRITE  LDX #0"<<endl;
+    cout<<"STA SCAN"<<endl;
+    cout<<"LDT #3"<<endl;
+    cout<<"JLOOP LDCH SCAN,X"<<endl;
+    cout<<"TD INDEV"<<endl;
+    cout<<"JEQ TLOOP"<<endl;
+    cout<<"WD INDEV"<<endl;
+    cout<<"TIXR T"<<endl;
+    cout<<"JLLT TLOOP"<<endl;
+    cout<<"RSUB"<<endl;
+}
+void generateMyREAD(){
+int    index=0;
+    while(index<scanning.size()){
+   flag1=1;
+        cout<<"JSUB READ"<<endl;
+        cout<<"STA "<<scanning[index]<<endl;
+        index++;
+
+}
 }
 ///
 void READ()
 {
+    scanning.clear();
     incr();
     if(get()!=15)ERROR();
     incr();
@@ -214,6 +223,8 @@ void READ()
     generateMyREAD();
     if(get()!=16)ERROR();
     incr();
+     if(get()!=11 && get()!=5)ERROR();
+  incr();
 }
 void WRITE()
 {
@@ -233,6 +244,9 @@ void WRITE()
     }
     if(get()!=16)ERROR();
     incr();
+  if(get()!=11 && get()!=5)ERROR();
+  incr();
+  generateMyWRITE();
 }
 void varAssembly(){
 
@@ -296,6 +310,7 @@ string intToString(int a){
   reverse(ret.begin(),ret.end());
   return ret;
 }
+
 void assignAssembley(){
    /// v[0] is the index to save data into
    /// skip v[0]+1
@@ -393,7 +408,7 @@ void ASSIGN()
     ///expression
     expression();
     v.pb(idx-1);
-    if(get()!=11)ERROR();
+    if(get()!=11 &&get()!=5)ERROR();
     incr();
     assignAssembley();
 }
@@ -444,39 +459,75 @@ void parse()
     incr();
     statements();
     ///
-    if(get()!=5)ERROR();///END.
+    //if(get()!=5)ERROR();///END.
 }
 int main()
 {
-    freopen("exp22.txt","r",stdin);
-    //freopen("test.out","w",stdout);
+    freopen("test.in","r",stdin);
+   // freopen("test.out","w",stdout);
     string s;
     addKeywords();
-    for(int i=0; i<6; i++)
+    for(int i=0; i<8; i++)
     {
         getline(cin,s);
         vector<string>z=spaceDivide(s);
         for(int j=0; j<z.size(); j++)
             divideIntoTokens(z[j]);
     }
+   cout<<tokens[1].second<<" START 0"<<endl;
     parse();
     for(int i=0;i<operations.size();i++)cout<<operations[i]<<endl;
-    generateMyWRITE();
-    for(int i=0;i<allvar.size();i++)cout<<allvar[i]<<" RESW 1\n";
-    if(flag==1 || flag2==1){
-        cout<<"INDEV BYTE \"F2\" \n";
-        cout<<"SCAN RESW 1\n";
+    if(flag1==1 || flag2==1){
+        cout<<"J ENDPROG"<<endl;
+        if(flag1==1){
+            SUBROUTINE_READ();
+        }
+        if(flag2==1){
+            SUBROUTINE_WRITE();
+        }
     }
+    for(int i=0;i<allvar.size();i++)cout<<allvar[i]<<" RESW 1\n";
     for(int i=1;i<=neededVar;i++)cout<<"USEDVAR"<<i<<" RESW 1\n";
+    if(flag1==1 || flag2==1){
+        cout<<"INDEV BYTE \"F2\" \n"<<endl;
+        cout<<"SCAN RESW 1\n"<<endl;
+        cout<<"ENDPROG END 0"<<endl;
+    }
     return 0;
 }
 /*
-PROGRAM BICS
+PROGRAM EEXP
 VAR
-X,Y,A,B,C,Z
+  a,b,left,right , result
 BEGIN
-X := X+5;
-A := Y*5+11*Z+9.5;
+READ(a,b);
+WRITE(a,b);
+left:=(a+b)+left;
+right:=right+(a+b);
+result:=left*right;
+WRITE(result)
 END.
 */
-
+/*
+PROGRAM EEXP
+VAR
+  a,b,c,f,h
+BEGIN
+READ(a,b,c);
+f:=(a+b);
+h:= a*b;
+WRITE(f,h)
+END.
+*/
+/*
+PROGRAM HMINSEC
+VAR
+  hours, convert_to , mins, secs, sixity
+BEGIN
+READ(hours);
+READ(convert_to);
+mins:= hours * sixity;
+secs:= mins*sixity;
+WRITE(mins,secs)
+END.
+*/
